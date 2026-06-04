@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "login": {
+      "title": "Sign in to Design Terminal",
+      "email_label": "Email address",
+      "email_placeholder": "you@company.com",
+      "submit": "Send sign-in link",
+      "sending": "Sending...",
+      "check_email_title": "Check your email",
+      "check_email_desc": "We sent a 6-digit code to {email}",
+      "code_label": "Verification code",
+      "code_placeholder": "123456",
+      "verify": "Sign in",
+      "verifying": "Verifying...",
+      "back": "Use a different email",
+      "invalid_email": "Please enter a valid email",
+      "invalid_code": "Invalid or expired code"
+    },
+    "invite": {
+      "title": "You've been invited",
+      "subtitle": "Join {workspace} as {role}",
+      "name_label": "Your full name",
+      "name_placeholder": "Jane Smith",
+      "email_label": "Email",
+      "submit": "Accept & continue",
+      "submitting": "Accepting...",
+      "invalid": "This invite is invalid or has expired",
+      "already_accepted": "This invite has already been accepted",
+      "success_title": "Invite accepted!",
+      "success_desc": "Check your email at {email} for a sign-in link."
+    }
+  },
+  "nav": {
+    "gallery": "Gallery",
+    "new": "New layout",
+    "my": "My layouts",
+    "admin": "Admin",
+    "sign_out": "Sign out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "back_to_home": "Back to home"
+  },
+  "gallery": {
+    "title": "Gallery",
+    "empty": "No layouts yet. Create your first one.",
+    "create_first": "Create layout"
+  }
+}

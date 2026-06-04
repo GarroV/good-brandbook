@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "login": {
+      "title": "Войти в Design Terminal",
+      "email_label": "Email адрес",
+      "email_placeholder": "you@company.com",
+      "submit": "Отправить ссылку для входа",
+      "sending": "Отправляем...",
+      "check_email_title": "Проверьте почту",
+      "check_email_desc": "Мы отправили 6-значный код на {email}",
+      "code_label": "Код подтверждения",
+      "code_placeholder": "123456",
+      "verify": "Войти",
+      "verifying": "Проверяем...",
+      "back": "Использовать другой email",
+      "invalid_email": "Введите корректный email",
+      "invalid_code": "Неверный или просроченный код"
+    },
+    "invite": {
+      "title": "Вас пригласили",
+      "subtitle": "Присоединиться к {workspace} как {role}",
+      "name_label": "Ваше полное имя",
+      "name_placeholder": "Иван Иванов",
+      "email_label": "Email",
+      "submit": "Принять и продолжить",
+      "submitting": "Принимаем...",
+      "invalid": "Это приглашение недействительно или истекло",
+      "already_accepted": "Это приглашение уже принято",
+      "success_title": "Приглашение принято!",
+      "success_desc": "Проверьте почту {email} — там ссылка для входа."
+    }
+  },
+  "nav": {
+    "gallery": "Галерея",
+    "new": "Новый макет",
+    "my": "Мои макеты",
+    "admin": "Управление",
+    "sign_out": "Выйти"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Что-то пошло не так. Попробуйте снова.",
+    "back_to_home": "На главную"
+  },
+  "gallery": {
+    "title": "Галерея",
+    "empty": "Макетов пока нет. Создайте первый.",
+    "create_first": "Создать макет"
+  }
+}
