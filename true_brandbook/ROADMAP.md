@@ -1,9 +1,9 @@
 # Design Terminal — Roadmap
 
-## Phase 0 — Инфраструктура (старт)
+## Phase 0 — Инфраструктура (в процессе)
 
 - [ ] Supabase проект, схема БД, RLS политики
-- [ ] Next.js проект, Tailwind, shadcn/ui
+- [x] Next.js проект, Tailwind v4, shadcn/ui (base-nova)
 - [ ] next-intl (EN + RU)
 - [ ] Supabase Auth, invite flow
 - [ ] Railway деплой, Dockerfile с Puppeteer

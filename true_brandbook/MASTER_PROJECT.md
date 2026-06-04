@@ -46,17 +46,17 @@
 
 | Слой | Технология |
 |------|-----------|
-| Фронтенд + API | Next.js (App Router) |
+| Фронтенд + API | Next.js 16 (App Router) |
 | База данных | Supabase (Postgres + RLS) |
 | Хранилище файлов | Supabase Storage |
-| Аутентификация | Supabase Auth |
+| Аутентификация | Supabase Auth (@supabase/ssr) |
 | Realtime | Supabase Realtime |
 | AI генерация | Claude API (claude-sonnet-4-6) |
 | Рендер файлов | Puppeteer + Chromium |
 | Email | Resend |
 | Деплой | Railway |
-| UI компоненты | shadcn/ui + Tailwind CSS |
-| i18n | next-intl (EN + RU, архитектура под расширение) |
+| UI компоненты | shadcn/ui (base-nova) + Tailwind CSS v4 |
+| i18n | next-intl 4 (EN + RU, архитектура под расширение) |
 
 ---
 
@@ -100,4 +100,4 @@
 
 ## Статус
 
-Проектирование завершено. Разработка не начата.
+Проектирование завершено. Разработка начата — Phase 0 в процессе.
