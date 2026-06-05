@@ -4,7 +4,7 @@
 
 - [ ] Supabase проект, схема БД, RLS политики
 - [x] Next.js проект, Tailwind v4, shadcn/ui (base-nova)
-- [ ] next-intl (EN + RU)
+- [x] next-intl (EN + RU)
 - [ ] Supabase Auth, invite flow
 - [ ] Railway деплой, Dockerfile с Puppeteer
 - [ ] Переменные окружения
