@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 function parseJwtClaims(token: string): Record<string, unknown> {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const parts = token.split('.')
+    if (parts.length < 3) return {}
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
     return JSON.parse(atob(base64))
   } catch {
     return {}
@@ -19,41 +21,51 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
+        setAll: (cookiesToSet, headers) => {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
+          )
+          Object.entries(headers).forEach(([key, value]) =>
+            response.headers.set(key, value)
           )
         }
       }
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
   const { pathname } = request.nextUrl
 
   const isPublic =
     pathname.startsWith('/login') ||
-    pathname.startsWith('/invite') ||
+    pathname.startsWith('/invite/') ||
+    pathname === '/invite' ||
     pathname.startsWith('/api/invites') ||
     pathname === '/favicon.ico'
 
-  if (!session && !isPublic) {
+  // getUser() validates with Supabase Auth server — safe for authorization decisions
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (session) {
-    const claims = parseJwtClaims(session.access_token)
-    const role = (claims.user_role as string) ?? 'member'
-    const isSuperadmin = Boolean(claims.is_superadmin)
+  if (user) {
+    // getSession() reads from in-memory cache after getUser() — no extra network call
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const claims = parseJwtClaims(session.access_token)
+      const role = (claims.user_role as string) ?? 'member'
+      const isSuperadmin = Boolean(claims.is_superadmin)
 
-    if (pathname.startsWith('/superadmin') && !isSuperadmin) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+      if (pathname.startsWith('/superadmin') && !isSuperadmin) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
 
-    if (pathname.startsWith('/admin') && role !== 'admin' && !isSuperadmin) {
-      return NextResponse.redirect(new URL('/', request.url))
+      if (pathname.startsWith('/admin') && role !== 'admin' && !isSuperadmin) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
     }
   }
 
