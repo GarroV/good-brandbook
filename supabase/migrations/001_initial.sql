@@ -122,6 +122,10 @@ as $$
   select workspace_id from public.users where id = auth.uid()
 $$;
 
+-- Workspaces: users can only see their own workspace
+create policy "workspace_isolation" on workspaces
+  using (id = my_workspace_id());
+
 -- Users: only see own workspace
 create policy "workspace_isolation" on users
   using (workspace_id = my_workspace_id());
@@ -270,14 +274,3 @@ begin
   values (p_workspace_id, p_user_id, 'batch');
 end;
 $$;
-
--- =====================================================
--- Draft cleanup cron (runs at 3am daily, requires pg_cron)
--- pg_cron is enabled by default on Supabase projects
--- =====================================================
-
-select cron.schedule('cleanup-drafts', '0 3 * * *', $$
-  delete from batches
-  where status = 'draft'
-    and created_at < now() - interval '3 days';
-$$);
