@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env*
+true_brandbook
+docs
+__tests__
+*.md
+Dockerfile
+.dockerignore
