@@ -1,13 +1,18 @@
 # Design Terminal — Roadmap
 
-## Phase 0 — Инфраструктура (в процессе)
+## Phase 0 — Инфраструктура ✅ ЗАВЕРШЕНО
 
-- [ ] Supabase проект, схема БД, RLS политики
-- [x] Next.js проект, Tailwind v4, shadcn/ui (base-nova)
+- [x] Supabase проект, схема БД, RLS политики
+- [x] Next.js 16 проект, Tailwind v4, shadcn/ui (base-nova)
 - [x] next-intl (EN + RU)
-- [ ] Supabase Auth, invite flow
-- [ ] Railway деплой, Dockerfile с Puppeteer
-- [ ] Переменные окружения
+- [x] Supabase Auth, invite flow (OTP login + invite acceptance)
+- [x] Railway деплой, Dockerfile с Chromium/Puppeteer
+- [x] Переменные окружения (.env.local.example)
+
+**⚠️ Ручные шаги перед запуском:**
+- Зарегистрировать `custom_access_token_hook`: Dashboard → Authentication → Hooks
+- Создать первый workspace + admin через Supabase SQL Editor
+- Заполнить `.env.local` ключами из проекта `btlglelwxazdxfqdmcti`
 
 ## Phase 1 — Брендбук
 
