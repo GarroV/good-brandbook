@@ -8,11 +8,14 @@ export type Json =
 
 export interface Database {
   public: {
+    Views: Record<string, never>
+    Enums: Record<string, never>
     Tables: {
       workspaces: {
         Row: { id: string; name: string; slug: string; created_at: string }
         Insert: { id?: string; name: string; slug: string; created_at?: string }
-        Update: Partial<Database['public']['Tables']['workspaces']['Insert']>
+        Update: { id?: string; name?: string; slug?: string; created_at?: string }
+        Relationships: []
       }
       users: {
         Row: {
@@ -33,7 +36,16 @@ export interface Database {
           is_superadmin?: boolean
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['users']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          name?: string
+          email?: string
+          role?: 'admin' | 'member'
+          is_superadmin?: boolean
+          created_at?: string
+        }
+        Relationships: []
       }
       brandbook: {
         Row: {
@@ -52,7 +64,15 @@ export interface Database {
           context?: string | null
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['brandbook']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          tokens?: Json
+          assets?: Json
+          context?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       batches: {
         Row: {
@@ -73,7 +93,16 @@ export interface Database {
           status?: 'draft' | 'published'
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['batches']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          user_id?: string
+          prompt?: string
+          reference_batch_id?: string | null
+          status?: 'draft' | 'published'
+          created_at?: string
+        }
+        Relationships: []
       }
       batch_items: {
         Row: {
@@ -94,7 +123,16 @@ export interface Database {
           status?: 'pending' | 'generating' | 'preview_ready' | 'exporting' | 'done' | 'failed'
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['batch_items']['Insert']>
+        Update: {
+          id?: string
+          batch_id?: string
+          workspace_id?: string
+          format?: string
+          html_url?: string | null
+          status?: 'pending' | 'generating' | 'preview_ready' | 'exporting' | 'done' | 'failed'
+          created_at?: string
+        }
+        Relationships: []
       }
       assets: {
         Row: {
@@ -113,7 +151,15 @@ export interface Database {
           url: string
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['assets']['Insert']>
+        Update: {
+          id?: string
+          batch_item_id?: string
+          workspace_id?: string
+          type?: 'jpeg_preview' | 'png_final' | 'pdf'
+          url?: string
+          created_at?: string
+        }
+        Relationships: []
       }
       invites: {
         Row: {
@@ -136,7 +182,17 @@ export interface Database {
           expires_at?: string
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['invites']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          email?: string
+          role?: 'admin' | 'member'
+          token?: string
+          accepted_at?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+        Relationships: []
       }
       workspace_limits: {
         Row: {
@@ -153,7 +209,14 @@ export interface Database {
           bonus_batches?: number
           reset_at?: string
         }
-        Update: Partial<Database['public']['Tables']['workspace_limits']['Insert']>
+        Update: {
+          workspace_id?: string
+          monthly_batches?: number
+          daily_per_user?: number
+          bonus_batches?: number
+          reset_at?: string
+        }
+        Relationships: []
       }
       activity_feed: {
         Row: {
@@ -172,7 +235,15 @@ export interface Database {
           action: 'generated' | 'published'
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['activity_feed']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          user_id?: string
+          format?: string | null
+          action?: 'generated' | 'published'
+          created_at?: string
+        }
+        Relationships: []
       }
       generation_log: {
         Row: {
@@ -189,7 +260,14 @@ export interface Database {
           format: string
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['generation_log']['Insert']>
+        Update: {
+          id?: string
+          workspace_id?: string
+          user_id?: string
+          format?: string
+          created_at?: string
+        }
+        Relationships: []
       }
     }
     Functions: {
