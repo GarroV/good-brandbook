@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getTranslations } from 'next-intl/server'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { isAuthDisabled } from '@/lib/dev-auth'
+import { MainNav } from './MainNav'
+import { LangToggle } from './LangToggle'
 
 interface NavProfile {
   name: string
@@ -46,32 +46,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <nav className="flex items-center gap-6">
-            <Link href="/" className="text-base font-bold tracking-tight">Good Brandbook</Link>
-            <Separator orientation="vertical" className="h-4" />
-            <Link href="/" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              {t('gallery')}
-            </Link>
-            <Link href="/new" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              {t('new')}
-            </Link>
-            <Link href="/my" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              {t('my')}
-            </Link>
-            {isAdmin && (
-              <Link href="/admin/brandbook" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-                {t('admin')}
-              </Link>
-            )}
-            {isAdmin && (
-              <Link href="/admin/materials" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-                {t('materials')}
-              </Link>
-            )}
-          </nav>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-foreground/70">{profile.name}</span>
+        <div className="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
+          <MainNav isAdmin={isAdmin} />
+          <div className="flex shrink-0 items-center gap-3">
+            <LangToggle />
+            <span className="hidden text-sm font-medium text-foreground/70 sm:inline">
+              {profile.name}
+            </span>
             <form action={signOut}>
               <Button type="submit" variant="ghost" size="sm">
                 {t('sign_out')}

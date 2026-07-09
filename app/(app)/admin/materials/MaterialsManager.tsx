@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { FORMATS, FORMAT_KEYS } from '@/lib/formats'
@@ -18,6 +18,18 @@ export interface MaterialCard {
 export function MaterialsManager({ items }: { items: MaterialCard[] }) {
   const t = useTranslations('admin_materials')
   const [state, formAction, pending] = useActionState(uploadMaterialAction, initialUploadState)
+  const [formatFilter, setFormatFilter] = useState('')
+  const [marketFilter, setMarketFilter] = useState('')
+
+  const markets = useMemo(
+    () => Array.from(new Set(items.map((m) => m.market).filter((m): m is string => Boolean(m)))),
+    [items],
+  )
+  const filtered = items.filter(
+    (m) =>
+      (!formatFilter || m.format === formatFilter) &&
+      (!marketFilter || m.market === marketFilter),
+  )
 
   return (
     <div className="flex flex-col gap-8">
@@ -81,8 +93,42 @@ export function MaterialsManager({ items }: { items: MaterialCard[] }) {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('empty')}</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {items.map((material) => (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={formatFilter}
+              onChange={(event) => setFormatFilter(event.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+            >
+              <option value="">{t('all_formats')}</option>
+              {FORMAT_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {FORMATS[key].label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={marketFilter}
+              onChange={(event) => setMarketFilter(event.target.value)}
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+            >
+              <option value="">{t('all_markets')}</option>
+              {markets.map((market) => (
+                <option key={market} value={market}>
+                  {market}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} / {items.length}
+            </span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('no_matches')}</p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {filtered.map((material) => (
             <li key={material.id} className="overflow-hidden rounded-lg border bg-card">
               {material.thumbUrl && (
                 <a
@@ -114,7 +160,9 @@ export function MaterialsManager({ items }: { items: MaterialCard[] }) {
               </div>
             </li>
           ))}
-        </ul>
+              </ul>
+            )}
+          </div>
       )}
     </div>
   )

@@ -34,7 +34,9 @@
       page.tsx          -- принятие инвайта (client component)
       actions.ts        -- server action: acceptInvite
   /(app)                -- защищённые страницы (требуют auth)
-    layout.tsx          -- навбар с ролями, getUser() проверка
+    layout.tsx          -- шапка (sticky), роли, getUser(); рендерит MainNav + LangToggle
+    MainNav.tsx         -- клиентская навигация: активный пункт (usePathname), мобильный скролл
+    LangToggle.tsx      -- переключатель локали EN/RU (cookie + router.refresh)
     page.tsx            -- галерея: сохранённые генерации воркспейса (сетка + скачать)
     /my
       page.tsx          -- «мои макеты»: генерации текущего пользователя
