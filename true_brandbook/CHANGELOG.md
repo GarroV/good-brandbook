@@ -32,7 +32,7 @@
 - `/new`: таймер прогресса + подсказка «обычно 15–40 с», селект формата заблокирован во время генерации
 
 ### Notes
-- Библиотека эталонов засеяна 6 реальными макетами Dodo из Google Drive (a5, 2× post, 3× story; `source='gdrive'`); коннектор Drive снова работает — можно долить остальной корпус
+- Библиотека эталонов засеяна 14 реальными макетами Dodo из Google Drive (a5 ×1, instagram_post ×6, instagram_story ×7; рынки TR/UAE/QA/RU/IMF; `source='gdrive'`); коннектор Drive работает — можно долить ещё
 - Saved-генерации сейчас `status='draft'`; когда включим draft-cleanup cron, публикация (draft→published) защитит их от очистки
 
 ## [0.1.0] — 2026-06-04/05 — Phase 0: Infrastructure
