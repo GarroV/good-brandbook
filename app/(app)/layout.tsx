@@ -4,23 +4,36 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { isAuthDisabled } from '@/lib/dev-auth'
+
+interface NavProfile {
+  name: string
+  role: string
+  is_superadmin: boolean
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let profile: NavProfile
 
-  if (!user) redirect('/login')
+  if (isAuthDisabled()) {
+    profile = { name: 'Dev (auth off)', role: 'admin', is_superadmin: true }
+  } else {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('name, role, is_superadmin')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) redirect('/login')
+    const { data } = await supabase
+      .from('users')
+      .select('name, role, is_superadmin')
+      .eq('id', user.id)
+      .single()
+    if (!data) redirect('/login')
+    profile = data
+  }
 
   const t = await getTranslations('nav')
-
   const isAdmin = profile.role === 'admin' || profile.is_superadmin
 
   async function signOut() {
@@ -47,8 +60,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               {t('my')}
             </Link>
             {isAdmin && (
-              <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/admin/brandbook" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('admin')}
+              </Link>
+            )}
+            {isAdmin && (
+              <Link href="/admin/materials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                {t('materials')}
               </Link>
             )}
           </nav>
@@ -62,9 +80,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
     </div>
   )
 }
