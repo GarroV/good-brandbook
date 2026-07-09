@@ -62,10 +62,15 @@
     "prompt_placeholder": "напр. Промо-пост об акции −20% на все пиццы в эти выходные",
     "generate": "Сгенерировать",
     "generating": "Генерируем…",
+    "time_hint": "Обычно 15–40 с",
+    "download": "Скачать",
     "preview_empty": "Здесь появится превью",
     "show_html": "Показать HTML",
     "hide_html": "Скрыть HTML",
     "error": "Не удалось сгенерировать. Попробуйте снова."
+  },
+  "generations": {
+    "download": "Скачать"
   },
   "admin_brandbook": {
     "title": "Брендбук",

@@ -150,6 +150,8 @@ create table assets (
 - `pdf` — для печатных форматов (A4, A5), после одобрения
 - `png_final` — для цифровых форматов (соцсети, TV), после одобрения
 
+> **Генерация (реализовано):** `/api/generate` пишет `batch` (`status='draft'`) + `batch_item` (`preview_ready`) + `asset` (`jpeg_preview`). Чистый HTML (с токеном `{{LEGAL}}`) и JPEG-превью хранятся в приватном бакете `generated` (миграция 003). Финальные `png_final`/`pdf` не хранятся — рендерятся по запросу в `GET /api/export/[id]` с подстановкой легала воркспейса.
+
 ### invites
 ```sql
 create table invites (

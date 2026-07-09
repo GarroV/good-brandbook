@@ -62,10 +62,15 @@
     "prompt_placeholder": "e.g. A promo post announcing 20% off all pizzas this weekend",
     "generate": "Generate",
     "generating": "Generating…",
+    "time_hint": "Usually 15–40s",
+    "download": "Download",
     "preview_empty": "Preview will appear here",
     "show_html": "View HTML",
     "hide_html": "Hide HTML",
     "error": "Generation failed. Please try again."
+  },
+  "generations": {
+    "download": "Download"
   },
   "admin_brandbook": {
     "title": "Brandbook",

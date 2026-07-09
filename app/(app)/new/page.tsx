@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { FORMATS, FORMAT_KEYS, type FormatKey } from '@/lib/formats'
@@ -8,6 +8,7 @@ import { FORMATS, FORMAT_KEYS, type FormatKey } from '@/lib/formats'
 interface GenerateResult {
   preview?: string
   html?: string
+  id?: string | null
   error?: string
 }
 
@@ -16,10 +17,21 @@ export default function NewLayoutPage() {
   const [format, setFormat] = useState<FormatKey>('instagram_post')
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [showHtml, setShowHtml] = useState(false)
 
   const canSubmit = prompt.trim().length >= 3 && !isGenerating
+
+  // Elapsed-seconds counter while generating — generation can take 15–40s, so a
+  // ticking timer reassures the user it isn't stuck.
+  useEffect(() => {
+    if (!isGenerating) return
+    setElapsed(0)
+    const started = Date.now()
+    const timer = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 250)
+    return () => clearInterval(timer)
+  }, [isGenerating])
 
   async function handleGenerate() {
     setIsGenerating(true)
@@ -52,7 +64,8 @@ export default function NewLayoutPage() {
             <select
               value={format}
               onChange={(event) => setFormat(event.target.value as FormatKey)}
-              className="h-10 rounded-md border bg-background px-3 text-sm"
+              disabled={isGenerating}
+              className="h-10 rounded-md border bg-background px-3 text-sm disabled:opacity-50"
             >
               {FORMAT_KEYS.map((key) => (
                 <option key={key} value={key}>
@@ -83,7 +96,12 @@ export default function NewLayoutPage() {
         <div className="flex flex-col gap-3">
           <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
             {isGenerating ? (
-              <span className="text-sm text-muted-foreground">{t('generating')}</span>
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <span className="text-sm font-medium">
+                  {t('generating')} · {elapsed}s
+                </span>
+                <span className="text-xs text-muted-foreground">{t('time_hint')}</span>
+              </div>
             ) : result?.preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -96,17 +114,28 @@ export default function NewLayoutPage() {
             )}
           </div>
 
-          {result?.html && (
-            <div>
-              <Button variant="ghost" size="sm" onClick={() => setShowHtml((value) => !value)}>
-                {showHtml ? t('hide_html') : t('show_html')}
-              </Button>
-              {showHtml && (
-                <pre className="mt-2 max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-xs">
-                  {result.html}
-                </pre>
+          {result?.preview && (
+            <div className="flex items-center gap-2">
+              {result.id && (
+                <a
+                  href={`/api/export/${result.id}`}
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  {t('download')}
+                </a>
+              )}
+              {result.html && (
+                <Button variant="ghost" size="sm" onClick={() => setShowHtml((value) => !value)}>
+                  {showHtml ? t('hide_html') : t('show_html')}
+                </Button>
               )}
             </div>
+          )}
+
+          {showHtml && result?.html && (
+            <pre className="max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-xs">
+              {result.html}
+            </pre>
           )}
         </div>
       </div>

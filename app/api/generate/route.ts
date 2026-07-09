@@ -8,6 +8,7 @@ import { extractHtml, validateHtml } from '@/lib/validation/html'
 import { renderPreview } from '@/lib/puppeteer/render'
 import { isAuthDisabled } from '@/lib/dev-auth'
 import { getExemplars, loadReferenceImages, type ReferenceImage } from '@/lib/materials/repository'
+import { saveGeneration } from '@/lib/generations/repository'
 
 // Puppeteer needs the Node.js runtime, and a single-format batch can take a while.
 export const runtime = 'nodejs'
@@ -140,5 +141,26 @@ export async function POST(request: NextRequest) {
   }
 
   const preview = `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}`
-  return NextResponse.json({ preview, html })
+
+  // Persist so the layout shows up in the gallery / "my layouts" and can be
+  // exported later. Store the CLEAN html (keeps {{LEGAL}}). Best-effort — a
+  // save failure must not drop the preview the user just waited for.
+  let id: string | null = null
+  if (workspaceId) {
+    try {
+      const saved = await saveGeneration({
+        workspaceId,
+        userId,
+        prompt: prompt.trim(),
+        format,
+        html,
+        previewBytes: image,
+      })
+      id = saved?.itemId ?? null
+    } catch {
+      id = null
+    }
+  }
+
+  return NextResponse.json({ preview, html, id })
 }

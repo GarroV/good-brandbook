@@ -21,7 +21,9 @@
 /app
   /api
     /generate
-      route.ts          -- POST: генерация одного макета (nodejs, maxDuration 300)
+      route.ts          -- POST: генерация + persist, возвращает id (nodejs, maxDuration 300)
+    /export/[id]
+      route.ts          -- GET: финальный PNG/PDF по сохранённому макету (re-stamp legal)
     /invites/[token]
       route.ts          -- GET: валидация invite токена (service role)
   /(auth)               -- публичные страницы
@@ -33,9 +35,9 @@
       actions.ts        -- server action: acceptInvite
   /(app)                -- защищённые страницы (требуют auth)
     layout.tsx          -- навбар с ролями, getUser() проверка
-    page.tsx            -- галерея (пустой стейт; генерации пока не персистятся)
+    page.tsx            -- галерея: сохранённые генерации воркспейса (сетка + скачать)
     /my
-      page.tsx          -- «мои макеты» (пустой стейт)
+      page.tsx          -- «мои макеты»: генерации текущего пользователя
     /new
       page.tsx          -- форма генерации (client): формат + промпт → превью
     /admin/brandbook    -- редактор брендбука (admin-only): page + actions + BrandbookForm
@@ -55,6 +57,8 @@
     html.ts             -- extractHtml, validateHtml (быстрый пре-фильтр)
   /materials
     repository.ts       -- brand_materials + Storage: getExemplars, loadReferenceImages, upload/list/delete, signed URL
+  /generations
+    repository.ts       -- сохранённые генерации: save/list + HTML для экспорта (batches/items/assets + бакет 'generated')
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')
@@ -67,6 +71,7 @@
 
 /components
   /ui                   -- shadcn/base-nova компоненты
+  generation-grid.tsx   -- сетка карточек сгенерированных макетов (превью + скачать)
 
 /messages
   en.json               -- English (auth, nav, common, gallery)
@@ -79,6 +84,7 @@
   /migrations
     001_initial.sql     -- полная схема БД
     002_brand_materials.sql -- brand_materials + приватный бакет brand-materials
+    003_generated_bucket.sql -- приватный бакет generated (HTML + превью сохранённых генераций)
 
 /__tests__
   formats.test.ts       -- 5 unit тестов
@@ -201,10 +207,21 @@ POST /api/generate   (runtime: nodejs, maxDuration: 300)
   → extractHtml() + validateHtml() (пре-фильтр; настоящая граница SSRF — слой рендера)
   → подстановка legal вместо {{LEGAL}} (в возвращаемом/хранимом HTML плейсхолдер остаётся — макеты чистые)
   → Puppeteer renderPreview() → JPEG data-URI
-  → { preview, html }
+  → saveGeneration(): batch (draft) + batch_item (preview_ready) + HTML/превью в бакет 'generated' + asset (best-effort)
+  → { preview, html, id }
 ```
 
-Публикация (PDF/PNG-финал), батчи, очередь форматов, Realtime, лимиты (`check_and_increment_limit`) — Phase 2+.
+Экспорт (кнопка «Скачать» в /new и галерее):
+
+```
+GET /api/export/[id]
+  → getGenerationForExport(): чистый HTML из бакета 'generated' (scoped по workspace)
+  → re-stamp legal вместо {{LEGAL}}
+  → Puppeteer renderFinal() → PNG (digital) / PDF (print)
+  → attachment (Content-Disposition)
+```
+
+Публикация в галерею (draft→published), батч из нескольких форматов, Realtime, лимиты (`check_and_increment_limit`) — Phase 2+.
 
 ---
 
