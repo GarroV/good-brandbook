@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { FORMAT_KEYS } from '@/lib/formats'
+import { FORMATS, FORMAT_KEYS } from '@/lib/formats'
 import { uploadMaterialAction, deleteMaterialAction, initialUploadState } from './actions'
 
 export interface MaterialCard {
@@ -33,32 +33,24 @@ export function MaterialsManager({ items }: { items: MaterialCard[] }) {
           />
         </label>
 
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">{t('title_label')}</span>
+          <input
+            type="text"
+            name="title"
+            placeholder={t('title_ph')}
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+          />
+        </label>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">{t('title_label')}</span>
-            <input
-              type="text"
-              name="title"
-              placeholder={t('title_ph')}
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">{t('kind')}</span>
-            <select name="kind" className="h-10 rounded-md border bg-background px-3 text-sm">
-              <option value="exemplar">{t('kind_exemplar')}</option>
-              <option value="product_photo">{t('kind_product')}</option>
-            </select>
-          </label>
-
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">{t('format')}</span>
             <select name="format" className="h-10 rounded-md border bg-background px-3 text-sm">
               <option value="">{t('any_format')}</option>
               {FORMAT_KEYS.map((key) => (
                 <option key={key} value={key}>
-                  {key}
+                  {FORMATS[key].label} — {FORMATS[key].width}×{FORMATS[key].height}
                 </option>
               ))}
             </select>
@@ -91,18 +83,26 @@ export function MaterialsManager({ items }: { items: MaterialCard[] }) {
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {items.map((material) => (
-            <li key={material.id} className="overflow-hidden rounded-lg border">
+            <li key={material.id} className="overflow-hidden rounded-lg border bg-card">
               {material.thumbUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={material.thumbUrl}
-                  alt={material.title}
-                  className="aspect-square w-full bg-muted object-cover"
-                />
+                <a
+                  href={material.thumbUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={t('open_full')}
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={material.thumbUrl}
+                    alt={material.title}
+                    className="aspect-square w-full cursor-zoom-in bg-muted object-cover transition-opacity hover:opacity-90"
+                  />
+                </a>
               )}
-              <div className="p-2 text-xs">
-                <div className="truncate font-medium">{material.title}</div>
-                <div className="text-muted-foreground">
+              <div className="p-2.5 text-xs">
+                <div className="truncate font-semibold">{material.title}</div>
+                <div className="mt-0.5 text-muted-foreground">
                   {material.format ?? t('any_format')}
                   {material.market ? ` · ${material.market}` : ''}
                 </div>

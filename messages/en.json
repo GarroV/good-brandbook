@@ -45,7 +45,13 @@
   },
   "gallery": {
     "title": "Gallery",
-    "empty": "No layouts yet. Create your first one.",
+    "empty": "No saved layouts yet. Generate one in New layout — saving to the gallery is coming soon.",
+    "create_first": "Create layout",
+    "materials_hint": "Looking for your designers' reference layouts? They live in Materials."
+  },
+  "my": {
+    "title": "My layouts",
+    "empty": "No saved layouts yet. Generate one in New layout — saving is coming soon.",
     "create_first": "Create layout"
   },
   "new": {
@@ -105,6 +111,7 @@
     "added": "Added",
     "delete": "Delete",
     "empty": "No materials yet. Upload a few reference layouts to guide generation.",
+    "open_full": "Open full size",
     "error": "Upload failed"
   }
 }

@@ -45,33 +45,33 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b">
+      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <nav className="flex items-center gap-6">
-            <span className="font-semibold text-sm">Design Terminal</span>
+            <Link href="/" className="text-base font-bold tracking-tight">Good Brandbook</Link>
             <Separator orientation="vertical" className="h-4" />
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
               {t('gallery')}
             </Link>
-            <Link href="/new" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/new" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
               {t('new')}
             </Link>
-            <Link href="/my" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/my" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
               {t('my')}
             </Link>
             {isAdmin && (
-              <Link href="/admin/brandbook" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/admin/brandbook" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
                 {t('admin')}
               </Link>
             )}
             {isAdmin && (
-              <Link href="/admin/materials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/admin/materials" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
                 {t('materials')}
               </Link>
             )}
           </nav>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{profile.name}</span>
+            <span className="text-sm font-medium text-foreground/70">{profile.name}</span>
             <form action={signOut}>
               <Button type="submit" variant="ghost" size="sm">
                 {t('sign_out')}

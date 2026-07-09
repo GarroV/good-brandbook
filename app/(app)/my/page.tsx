@@ -2,8 +2,8 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-export default async function GalleryPage() {
-  const t = await getTranslations('gallery')
+export default async function MyLayoutsPage() {
+  const t = await getTranslations('my')
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-4 text-center">
@@ -12,7 +12,6 @@ export default async function GalleryPage() {
       <Link href="/new">
         <Button>{t('create_first')}</Button>
       </Link>
-      <p className="mt-2 text-sm text-muted-foreground">{t('materials_hint')}</p>
     </div>
   )
 }

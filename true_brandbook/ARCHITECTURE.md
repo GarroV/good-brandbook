@@ -33,7 +33,9 @@
       actions.ts        -- server action: acceptInvite
   /(app)                -- защищённые страницы (требуют auth)
     layout.tsx          -- навбар с ролями, getUser() проверка
-    page.tsx            -- галерея (placeholder)
+    page.tsx            -- галерея (пустой стейт; генерации пока не персистятся)
+    /my
+      page.tsx          -- «мои макеты» (пустой стейт)
     /new
       page.tsx          -- форма генерации (client): формат + промпт → превью
     /admin/brandbook    -- редактор брендбука (admin-only): page + actions + BrandbookForm
