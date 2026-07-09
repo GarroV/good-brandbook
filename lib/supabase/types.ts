@@ -74,6 +74,60 @@ export interface Database {
         }
         Relationships: []
       }
+      brand_materials: {
+        Row: {
+          id: string
+          workspace_id: string
+          title: string
+          kind: 'exemplar' | 'product_photo' | 'logo' | 'other'
+          format: string | null
+          market: string | null
+          campaign: string | null
+          tags: string[]
+          storage_path: string
+          mime_type: string
+          width: number | null
+          height: number | null
+          source: 'upload' | 'gdrive'
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          title: string
+          kind?: 'exemplar' | 'product_photo' | 'logo' | 'other'
+          format?: string | null
+          market?: string | null
+          campaign?: string | null
+          tags?: string[]
+          storage_path: string
+          mime_type: string
+          width?: number | null
+          height?: number | null
+          source?: 'upload' | 'gdrive'
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          title?: string
+          kind?: 'exemplar' | 'product_photo' | 'logo' | 'other'
+          format?: string | null
+          market?: string | null
+          campaign?: string | null
+          tags?: string[]
+          storage_path?: string
+          mime_type?: string
+          width?: number | null
+          height?: number | null
+          source?: 'upload' | 'gdrive'
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       batches: {
         Row: {
           id: string
