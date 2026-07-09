@@ -20,6 +20,8 @@
 ```
 /app
   /api
+    /generate
+      route.ts          -- POST: генерация одного макета (nodejs, maxDuration 300)
     /invites/[token]
       route.ts          -- GET: валидация invite токена (service role)
   /(auth)               -- публичные страницы
@@ -32,16 +34,34 @@
   /(app)                -- защищённые страницы (требуют auth)
     layout.tsx          -- навбар с ролями, getUser() проверка
     page.tsx            -- галерея (placeholder)
+    /new
+      page.tsx          -- форма генерации (client): формат + промпт → превью
+    /admin/brandbook    -- редактор брендбука (admin-only): page + actions + BrandbookForm
+    /admin/materials    -- библиотека референс-материалов (admin-only): page + actions + MaterialsManager
   layout.tsx            -- root layout, NextIntlClientProvider
   globals.css
 
 /lib
+  /claude
+    prompt.ts           -- buildPrompt, SYSTEM_PROMPT, REFERENCE_DIRECTIVE, BrandTokens, buildMockHtml
+    client.ts           -- generateHtml (Anthropic, vision-референсы)
+  /openai
+    client.ts           -- generateHtmlOpenAI (OpenAI, vision-референсы через image_url)
+  /puppeteer
+    render.ts           -- renderPreview → JPEG (JS off + перехват сети: только data:/about:)
+  /validation
+    html.ts             -- extractHtml, validateHtml (быстрый пре-фильтр)
+  /materials
+    repository.ts       -- brand_materials + Storage: getExemplars, loadReferenceImages, upload/list/delete, signed URL
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')
-    types.ts            -- Database interface (10 таблиц, explicit Update types)
+    types.ts            -- Database interface (11 таблиц, explicit Update types)
   /formats
     index.ts            -- FORMATS константа, FormatKey, FORMAT_KEYS
+  workspace.ts          -- getActiveWorkspaceId / getAdminWorkspaceId (admin-гейт по БД)
+  dev-auth.ts           -- isAuthDisabled() (dev-only, gated by NODE_ENV)
+  utils.ts              -- cn и пр.
 
 /components
   /ui                   -- shadcn/base-nova компоненты
@@ -56,6 +76,7 @@
 /supabase
   /migrations
     001_initial.sql     -- полная схема БД
+    002_brand_materials.sql -- brand_materials + приватный бакет brand-materials
 
 /__tests__
   formats.test.ts       -- 5 unit тестов
@@ -160,26 +181,28 @@ const supabase = createClient()
 
 ---
 
-## Флоу генерации (Phase 2, не реализован)
+## Флоу генерации (прототип — реализован)
+
+Один формат, синхронный ответ. Батчи/очередь/публикация — Phase 2+.
 
 ```
-POST /api/generate
-  → проверка брендбука (tokens не пустой)
-  → check_and_increment_limit() — атомарно в Postgres
-  → создать batch + batch_items
-  → Promise.allSettled(formats.map(generateFormat))
-     → Claude API → HTML
-     → validateHtml()
-     → uploadHtml() → Supabase Storage
-     → Puppeteer → JPEG превью
-     → updateItem(status: 'preview_ready')
-  → Supabase Realtime уведомляет клиент
-
-POST /api/batches/[id]/publish
-  → Puppeteer → PDF/PNG
-  → updateItem(status: 'done')
-  → activity_feed INSERT → Realtime
+POST /api/generate   (runtime: nodejs, maxDuration: 300)
+  → auth (getUser) или DISABLE_AUTH (dev) → workspace_id
+  → brandbook воркспейса (tokens + context)
+  → getExemplars(workspace, format) + loadReferenceImages()
+       — до 3 референс-макетов из brand_materials (best-effort; ошибки → пропуск, генерация не падает)
+  → buildPrompt() — SYSTEM_PROMPT + design_system (приоритетный блок) + формат + запрос
+  → провайдер (GENERATION_PROVIDER):
+       openai    → generateHtmlOpenAI(assembled, references)  (референсы = image_url)
+       anthropic → generateHtml(assembled, references)        (референсы = image blocks)
+       MOCK_GENERATION=1 → buildMockHtml() (без API, dev)
+  → extractHtml() + validateHtml() (пре-фильтр; настоящая граница SSRF — слой рендера)
+  → подстановка legal вместо {{LEGAL}} (в возвращаемом/хранимом HTML плейсхолдер остаётся — макеты чистые)
+  → Puppeteer renderPreview() → JPEG data-URI
+  → { preview, html }
 ```
+
+Публикация (PDF/PNG-финал), батчи, очередь форматов, Realtime, лимиты (`check_and_increment_limit`) — Phase 2+.
 
 ---
 

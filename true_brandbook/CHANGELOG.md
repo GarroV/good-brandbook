@@ -1,5 +1,24 @@
 # Design Terminal — Changelog
 
+## [Unreleased] — 2026-07-09 — Reference-exemplar library (знание бренда)
+
+### Added
+- Таблица `brand_materials` (миграция `002`) + приватный Storage-бакет `brand-materials` — воркспейс-скоуп библиотека референс-макетов/фото продукта; RLS по `workspace_id`
+- Админка `/admin/materials` — загрузка/удаление материалов (PNG/JPEG/WebP ≤10 МБ), превью по signed-URL (`page.tsx` + `actions.ts` + `MaterialsManager.tsx`)
+- Vision-референсы в генерации: `lib/materials/repository.ts` (`getExemplars`, `loadReferenceImages`) подмешивает до 3 подходящих формату макетов в запрос — OpenAI через `image_url`, Claude через image blocks. Best-effort: пустая/битая библиотека → text-only, генерация не падает
+- `REFERENCE_DIRECTIVE` в `lib/claude/prompt.ts` — единая директива для обоих провайдеров
+- `lib/workspace.ts` — `getActiveWorkspaceId()` и `getAdminWorkspaceId()`
+- i18n: namespace `admin_materials`, nav-ключ `materials` (en + ru)
+
+### Security
+- Admin-only server actions авторизуют роль **по БД внутри самого экшена** (не только middleware) для `/admin/materials` и `/admin/brandbook` — закрывает обход через action-ID, вытащенный из `_next/static` и отправленный с разрешённого роута (нашли адверсариал-ревью + внешний security-скан, HIGH)
+
+### Fixed
+- Миграция `002` идемпотентна: `drop policy if exists` перед `create policy`
+
+### Notes
+- Свежие макеты дизайнеров (Google Drive) как эталоны — ждут переавторизации Drive-коннектора; пока библиотеку можно наполнять вручную через `/admin/materials`
+
 ## [0.1.0] — 2026-06-04/05 — Phase 0: Infrastructure
 
 ### Added

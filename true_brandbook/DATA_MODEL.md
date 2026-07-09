@@ -60,13 +60,40 @@ create table brandbook (
   "logo": {
     "light": "https://...",
     "dark": "https://..."
-  }
+  },
+  "legal": "Дисклеймер рынка (per-workspace)"
 }
 ```
+
+**`legal`** — обязательный юридический дисклеймер рынка. В макет **не вшивается**: модель выводит токен `{{LEGAL}}`, а этот текст подставляется на этапе рендера/скачивания. В БД макеты хранятся чистыми (портятся между рынками). Каноничная форма типа `tokens` — интерфейс `BrandTokens` в `lib/claude/prompt.ts`.
 
 **`context`** — свободный текст для Claude: tone of voice, типичные фразы, антипаттерны.
 
 **`assets`** — JSON со ссылками на файлы в Supabase Storage (логотипы, иконки, паттерны).
+
+### brand_materials
+```sql
+create table brand_materials (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  title        text not null,
+  kind         text not null default 'exemplar'
+                 check (kind in ('exemplar','product_photo','logo','other')),
+  format       text,        -- FormatKey, или null = для любого формата
+  market       text,        -- опц.: 'UAE','TR','QA','RU', …
+  campaign     text,        -- опц. группировка
+  tags         text[] not null default '{}',
+  storage_path text not null,  -- путь в приватном бакете 'brand-materials'
+  mime_type    text not null,
+  width        int,
+  height       int,
+  source       text not null default 'upload' check (source in ('upload','gdrive')),
+  created_by   uuid references users(id),
+  created_at   timestamptz default now()
+);
+```
+
+Библиотека референс-материалов воркспейса — реальные макеты дизайнеров (и фото продукта). При генерации `getExemplars(workspace, format)` берёт до 3 записей `kind='exemplar'` (совпадение формата или `format is null`) и `loadReferenceImages()` отдаёт их модели как визуальные примеры (миграция `002`). Файлы — в **приватном** Storage-бакете `brand-materials` (доступ только сервером через service-role; UI показывает короткоживущие signed-URL). Загрузка/удаление — админ-only, `/admin/materials`. Логика: `lib/materials/repository.ts`.
 
 ### batches
 ```sql
@@ -192,6 +219,7 @@ alter table assets         enable row level security;
 alter table invites        enable row level security;
 alter table activity_feed  enable row level security;
 alter table workspace_limits enable row level security;
+alter table brand_materials  enable row level security;
 
 -- helper функция
 create or replace function my_workspace_id()
@@ -205,6 +233,10 @@ create policy "workspace_isolation" on users
 
 -- brandbook
 create policy "workspace_isolation" on brandbook
+  using (workspace_id = my_workspace_id());
+
+-- brand_materials (USING удваивается как WITH CHECK для INSERT/UPDATE)
+create policy "workspace_isolation" on brand_materials
   using (workspace_id = my_workspace_id());
 
 -- batches: draft видит только автор, published — весь workspace
