@@ -1,4 +1,5 @@
-import type { Format } from '@/lib/formats'
+import type { Format, FormatKey } from '@/lib/formats'
+import { HOUSE_RULES, FORMAT_BRIEFS } from './patterns'
 
 // Shape of brandbook.tokens (jsonb). All fields optional — a workspace may have
 // a partial brandbook. See true_brandbook/DATA_MODEL.md for the canonical schema.
@@ -104,7 +105,16 @@ No brandbook is configured for this workspace yet. Use a restrained, professiona
 export function buildPrompt(input: PromptInput): AssembledPrompt {
   const { format, formatKey, tokens, context, prompt } = input
 
+  const brief = FORMAT_BRIEFS[formatKey as FormatKey]
   const user = `${renderDesignSystem(tokens, context)}
+
+<house_rules>
+${HOUSE_RULES}
+</house_rules>
+${brief ? `\n<format_brief>\n${brief}\n</format_brief>\n` : ''}
+<render_constraint>
+CRITICAL — this document renders fully offline with NO network access. Do NOT use url() to any remote resource, <img> with an http/https src, @import, <link>, or any external URL — such output is REJECTED. No real product photo is available in this generation: wherever the brief calls for product photography or a full-bleed photo, reserve a CLEAN placeholder instead — a soft rounded panel in a light neutral tint (or a flat brand-color block) filling that zone — do NOT hand-draw a detailed fake product, and do NOT add QR codes. All backgrounds and shapes are CSS colors/gradients only. Only the embedded brand fonts 'Rooftop' (headlines) and 'Noto Sans' (body) are available.
+</render_constraint>
 
 <format>
 Format key: ${formatKey}

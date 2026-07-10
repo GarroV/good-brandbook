@@ -49,7 +49,8 @@
 
 /lib
   /claude
-    prompt.ts           -- buildPrompt, SYSTEM_PROMPT, REFERENCE_DIRECTIVE, BrandTokens, buildMockHtml
+    prompt.ts           -- buildPrompt (system + design_system + house_rules + format_brief + render_constraint), buildMockHtml
+    patterns.ts         -- HOUSE_RULES + FORMAT_BRIEFS (из анализа реальных макетов; см. DODO_LAYOUT_PATTERNS.md)
     client.ts           -- generateHtml (Anthropic, vision-референсы)
   /openai
     client.ts           -- generateHtmlOpenAI (OpenAI, vision-референсы через image_url)

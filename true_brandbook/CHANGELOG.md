@@ -32,6 +32,7 @@
 - `/new`: таймер прогресса + подсказка «обычно 15–40 с», селект формата заблокирован во время генерации
 - Локальная папка-библиотека (dev): при скачивании файл зеркалится в `LOCAL_LIBRARY_DIR/02 Generated/<format>/` (`lib/library/local.ts`); в prod — no-op
 - **Реальные бренд-шрифты**: Rooftop (хедлайны) + Noto Sans (body, кириллица) забраны с Drive в `public/fonts/`, встраиваются `@font-face` data-URI в рендер (`lib/fonts/embed.ts`, инъекция в `render.ts`); токены брендбука → Rooftop/Noto Sans; системный промпт обновлён. Настоящая типографика вместо fallback. (Лицензия: Rooftop — коммерческий, только внутреннее использование; репо не открывать)
+- **Паттерны реальных макетов → в промпт**: проанализирован дизайн-архив (~452 превью, 6 форматов) → `true_brandbook/DODO_LAYOUT_PATTERNS.md` (общие правила + бриф под формат). `lib/claude/patterns.ts` (`HOUSE_RULES` + `FORMAT_BRIEFS`) подмешивается в `buildPrompt` вместе с `render_constraint` (offline: без `url()`/внешних картинок; продукт = чистый плейсхолдер под будущий hero-слот). Выход стал заметно on-brand: оффер-pill, strike-through старой цены, cream-фон, Rooftop, «ONLY IN DODO APP», лого, легал.
 
 ### Notes
 - Библиотека эталонов засеяна 14 реальными макетами Dodo из Google Drive (a5 ×1, instagram_post ×6, instagram_story ×7; рынки TR/UAE/QA/RU/IMF; `source='gdrive'`); коннектор Drive работает — можно долить ещё
