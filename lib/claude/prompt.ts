@@ -34,7 +34,13 @@ export interface PromptInput {
   tokens: BrandTokens | null
   context: string | null
   prompt: string
+  // True when a real product photo will be composited at the {{PRODUCT}} token.
+  hasProduct?: boolean
 }
+
+const CONSTRAINT_PRODUCT = `CRITICAL — this document renders fully offline with NO network access. A REAL product photo IS provided and will be composited into the layout: place a single hero image whose source is the EXACT token {{PRODUCT}} — either \`<img src="{{PRODUCT}}" …>\` or an element with \`background-image:url({{PRODUCT}})\` (use background-size:cover or contain) — sized and positioned as the product hero per the format brief (large, anchored opposite the text, bleeding off an edge). Compose the whole layout around it. Do NOT hand-draw a fake product, do NOT add any placeholder caption, and do NOT use any OTHER url(), <img>, remote src, @import or <link> — only {{PRODUCT}} is allowed (once, or twice if the format shows two items). All other backgrounds/shapes are CSS colors/gradients. Only the embedded brand fonts 'Rooftop' (headlines) and 'Noto Sans' (body) are available.`
+
+const CONSTRAINT_NO_PRODUCT = `CRITICAL — this document renders fully offline with NO network access. Do NOT use url() to any remote resource, <img> with an http/https src, @import, <link>, or any external URL — such output is REJECTED. No product photo is available in this generation: wherever the brief calls for product photography, reserve a CLEAN placeholder — a soft rounded panel in a light neutral tint (or a flat brand-color block) filling that zone — do NOT hand-draw a detailed fake product and do NOT add QR codes. All backgrounds and shapes are CSS colors/gradients only. Only the embedded brand fonts 'Rooftop' (headlines) and 'Noto Sans' (body) are available.`
 
 export interface AssembledPrompt {
   system: string
@@ -57,6 +63,7 @@ Absolute rules:
 - Write real, legible, relevant copy — never lorem ipsum.
 - For the legally-required disclaimer block, output the EXACT literal token {{LEGAL}} as its only content — never write, translate or invent legal text. Style it as the smallest element (uppercase, condensed, low opacity) at the bottom.
 - Fill the whole canvas with a balanced composition — no large empty/dead areas, nothing floating alone in a corner. Establish strong scale contrast between the headline and everything else.
+- Size the headline to fit its column: NEVER break a word across lines (wrap only at spaces; set overflow-wrap:normal, word-break:keep-all, hyphens:none). If it would overflow, reduce the font-size rather than hyphenate, clip, or split a word.
 - Follow the design system's layout, alignment, spacing, color and type rules EXACTLY — they are directives, not suggestions.
 - Avoid generic "AI-slop" aesthetics: no default system fonts used as a design choice, no purple gradients, no everything-centered filler, no clichéd stock composition. It must read as a real, publishable brand piece.
 - This is a finished piece a marketer will publish, not a wireframe. Apply real hierarchy, rhythm and composition appropriate to the format.`
@@ -106,6 +113,7 @@ export function buildPrompt(input: PromptInput): AssembledPrompt {
   const { format, formatKey, tokens, context, prompt } = input
 
   const brief = FORMAT_BRIEFS[formatKey as FormatKey]
+  const renderConstraint = input.hasProduct ? CONSTRAINT_PRODUCT : CONSTRAINT_NO_PRODUCT
   const user = `${renderDesignSystem(tokens, context)}
 
 <house_rules>
@@ -113,7 +121,7 @@ ${HOUSE_RULES}
 </house_rules>
 ${brief ? `\n<format_brief>\n${brief}\n</format_brief>\n` : ''}
 <render_constraint>
-CRITICAL — this document renders fully offline with NO network access. Do NOT use url() to any remote resource, <img> with an http/https src, @import, <link>, or any external URL — such output is REJECTED. No real product photo is available in this generation: wherever the brief calls for product photography or a full-bleed photo, reserve a CLEAN placeholder instead — a soft rounded panel in a light neutral tint (or a flat brand-color block) filling that zone — do NOT hand-draw a detailed fake product, and do NOT add QR codes. All backgrounds and shapes are CSS colors/gradients only. Only the embedded brand fonts 'Rooftop' (headlines) and 'Noto Sans' (body) are available.
+${renderConstraint}
 </render_constraint>
 
 <format>

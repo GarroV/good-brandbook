@@ -212,7 +212,8 @@ POST /api/generate   (runtime: nodejs, maxDuration: 300)
        anthropic → generateHtml(assembled, references)        (референсы = image blocks)
        MOCK_GENERATION=1 → buildMockHtml() (без API, dev)
   → extractHtml() + validateHtml() (пре-фильтр; настоящая граница SSRF — слой рендера)
-  → подстановка legal вместо {{LEGAL}} (в возвращаемом/хранимом HTML плейсхолдер остаётся — макеты чистые)
+  → resolveProductPhoto(): реальное фото продукта по запросу (kind=product_photo, теги RU/EN) → data-URI (промпт ветвится: есть фото → hero-<img src={{PRODUCT}}>, нет → чистый плейсхолдер)
+  → подстановка legal + фото вместо {{LEGAL}}/{{PRODUCT}} (в хранимом HTML плейсхолдеры остаются — макеты чистые/портативные)
   → Puppeteer renderPreview() → JPEG data-URI
   → saveGeneration(): batch (draft) + batch_item (preview_ready) + HTML/превью в бакет 'generated' + asset (best-effort)
   → { preview, html, id }

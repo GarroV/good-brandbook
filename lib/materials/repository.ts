@@ -127,6 +127,70 @@ export async function saveMaterial(
   return { ok: true }
 }
 
+export interface ProductPhoto {
+  id: string
+  title: string
+  tags: string[]
+  storagePath: string
+  mime: string
+}
+
+// All product photos for the workspace (kind='product_photo'), newest first.
+export async function getProductPhotos(workspaceId: string): Promise<ProductPhoto[]> {
+  const { data } = await createAdminClient()
+    .from('brand_materials')
+    .select('id, title, tags, storage_path, mime_type, created_at')
+    .eq('workspace_id', workspaceId)
+    .eq('kind', 'product_photo')
+    .order('created_at', { ascending: false })
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    title: m.title,
+    tags: (m.tags as string[]) ?? [],
+    storagePath: m.storage_path,
+    mime: m.mime_type,
+  }))
+}
+
+// Deterministically pick the product photo that best matches a prompt: score by
+// how many of a photo's keywords (title words + tags, RU/EN) appear in the
+// prompt. Falls back to the most recent photo so we always offer a real shot —
+// the user steers the choice by naming the product in their request.
+export function matchProductPhoto(photos: ProductPhoto[], prompt: string): ProductPhoto | null {
+  if (photos.length === 0) return null
+  const p = prompt.toLowerCase()
+  let best = photos[0]
+  let bestScore = -1
+  for (const photo of photos) {
+    const keywords = [
+      ...photo.title.toLowerCase().split(/[^\p{L}\p{N}]+/u),
+      ...photo.tags.map((t) => t.toLowerCase()),
+    ].filter((w) => w.length >= 3)
+    const score = keywords.reduce((n, w) => (p.includes(w) ? n + 1 : n), 0)
+    if (score > bestScore) {
+      bestScore = score
+      best = photo
+    }
+  }
+  return best
+}
+
+// Pick + download the best-matching product photo as a data-URI, ready to be
+// composited into a layout at the {{PRODUCT}} token. Null when none exist.
+export async function resolveProductPhoto(
+  workspaceId: string,
+  prompt: string,
+): Promise<{ title: string; dataUri: string } | null> {
+  const photo = matchProductPhoto(await getProductPhotos(workspaceId), prompt)
+  if (!photo) return null
+  const { data, error } = await createAdminClient()
+    .storage.from(MATERIALS_BUCKET)
+    .download(photo.storagePath)
+  if (error || !data) return null
+  const bytes = Buffer.from(await data.arrayBuffer())
+  return { title: photo.title, dataUri: `data:${photo.mime};base64,${bytes.toString('base64')}` }
+}
+
 export async function deleteMaterial(workspaceId: string, id: string): Promise<void> {
   const admin = createAdminClient()
   const { data } = await admin

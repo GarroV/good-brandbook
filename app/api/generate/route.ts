@@ -7,7 +7,7 @@ import { generateHtmlOpenAI } from '@/lib/openai/client'
 import { extractHtml, validateHtml } from '@/lib/validation/html'
 import { renderPreview } from '@/lib/puppeteer/render'
 import { isAuthDisabled } from '@/lib/dev-auth'
-import { getExemplars, loadReferenceImages, type ReferenceImage } from '@/lib/materials/repository'
+import { getExemplars, loadReferenceImages, resolveProductPhoto, type ReferenceImage } from '@/lib/materials/repository'
 import { saveGeneration } from '@/lib/generations/repository'
 
 // Puppeteer needs the Node.js runtime, and a single-format batch can take a while.
@@ -85,12 +85,25 @@ export async function POST(request: NextRequest) {
     context = brand?.context ?? null
   }
 
+  // Pick a real product photo from the library matched to the prompt (offered by
+  // default; the user names a specific product in the prompt to steer it). It is
+  // composited into the {{PRODUCT}} slot at render — the stored HTML keeps the token.
+  let product: { title: string; dataUri: string } | null = null
+  if (workspaceId && process.env.MOCK_GENERATION !== '1') {
+    try {
+      product = await resolveProductPhoto(workspaceId, prompt.trim())
+    } catch {
+      product = null
+    }
+  }
+
   const promptInput = {
     format: FORMATS[format],
     formatKey: format,
     tokens,
     context,
     prompt: prompt.trim(),
+    hasProduct: !!product,
   }
 
   let raw: string
@@ -130,7 +143,8 @@ export async function POST(request: NextRequest) {
   // returned/stored HTML keeps the {{LEGAL}} placeholder so layouts stay clean
   // and portable (a "use as base" in another market gets its own legal).
   const legal = typeof promptInput.tokens?.legal === 'string' ? promptInput.tokens.legal : ''
-  const htmlForRender = html.replaceAll('{{LEGAL}}', escapeHtmlText(legal))
+  let htmlForRender = html.replaceAll('{{LEGAL}}', escapeHtmlText(legal))
+  if (product) htmlForRender = htmlForRender.replaceAll('{{PRODUCT}}', product.dataUri)
 
   let image: Uint8Array
   try {

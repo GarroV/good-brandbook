@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { isAuthDisabled } from '@/lib/dev-auth'
 import { getActiveWorkspaceId } from '@/lib/workspace'
 import { getGenerationForExport } from '@/lib/generations/repository'
+import { resolveProductPhoto } from '@/lib/materials/repository'
 import { FORMATS, type FormatKey } from '@/lib/formats'
 import { renderFinal } from '@/lib/puppeteer/render'
 import { saveDownloadToLocalLibrary } from '@/lib/library/local'
@@ -41,7 +42,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     .eq('workspace_id', workspaceId)
     .maybeSingle()
   const legal = (brand?.tokens as BrandTokens | null)?.legal
-  const html = gen.html.replaceAll('{{LEGAL}}', escapeHtmlText(typeof legal === 'string' ? legal : ''))
+  let html = gen.html.replaceAll('{{LEGAL}}', escapeHtmlText(typeof legal === 'string' ? legal : ''))
+
+  // Re-composite the product photo (same matcher on the stored prompt → same
+  // photo as the preview) into the {{PRODUCT}} slot for the final file.
+  const product = await resolveProductPhoto(workspaceId, gen.prompt).catch(() => null)
+  if (product) html = html.replaceAll('{{PRODUCT}}', product.dataUri)
 
   const output = format.output === 'pdf' ? 'pdf' : 'png'
   let bytes: Uint8Array

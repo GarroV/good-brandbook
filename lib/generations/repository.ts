@@ -144,17 +144,23 @@ export async function listGenerations(
 export async function getGenerationForExport(
   itemId: string,
   workspaceId: string,
-): Promise<{ html: string; format: string } | null> {
+): Promise<{ html: string; format: string; prompt: string } | null> {
   const admin = createAdminClient()
   const { data: item } = await admin
     .from('batch_items')
-    .select('format, html_url')
+    .select('format, html_url, batch_id')
     .eq('id', itemId)
     .eq('workspace_id', workspaceId)
     .maybeSingle()
   if (!item?.html_url) return null
 
+  const { data: batch } = await admin
+    .from('batches')
+    .select('prompt')
+    .eq('id', item.batch_id)
+    .maybeSingle()
+
   const { data, error } = await admin.storage.from(BUCKET).download(item.html_url)
   if (error || !data) return null
-  return { html: await data.text(), format: item.format }
+  return { html: await data.text(), format: item.format, prompt: batch?.prompt ?? '' }
 }
