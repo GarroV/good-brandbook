@@ -63,7 +63,10 @@ Absolute rules:
 - Write real, legible, relevant copy — never lorem ipsum.
 - For the legally-required disclaimer block, output the EXACT literal token {{LEGAL}} as its only content — never write, translate or invent legal text. Style it as the smallest element (uppercase, condensed, low opacity) at the bottom.
 - Fill the whole canvas with a balanced composition — no large empty/dead areas, nothing floating alone in a corner. Establish strong scale contrast between the headline and everything else.
-- Size the headline to fit its column: NEVER break a word across lines (wrap only at spaces; set overflow-wrap:normal, word-break:keep-all, hyphens:none). If it would overflow, reduce the font-size rather than hyphenate, clip, or split a word.
+- Size the headline to fit its column: NEVER break a word across lines (wrap only at spaces; set overflow-wrap:normal, word-break:keep-all, hyphens:none). If it would overflow, reduce the font-size rather than hyphenate, clip, or split a word. Keep headlines short (≈2–4 words per line, ≤3 lines).
+- NO CLIPPING / NO OVERFLOW: every element stays fully inside the canvas with a ~5% safe margin on all sides; nothing is cut off by an edge. Text must fit its box (no truncation).
+- NO COLLISIONS: the product image, headline, offer/price badge, logo and legal each occupy their OWN space and must not overlap so as to hide or cut into one another — the product must never cover the headline or the price. Leave clear gaps between blocks.
+- FILL THE CANVAS: distribute content across the whole frame per the format brief — no large empty band. For tall/story formats use three bands: headline near the top, the product as the hero in the middle, and the offer/CTA toward the bottom.
 - Follow the design system's layout, alignment, spacing, color and type rules EXACTLY — they are directives, not suggestions.
 - Avoid generic "AI-slop" aesthetics: no default system fonts used as a design choice, no purple gradients, no everything-centered filler, no clichéd stock composition. It must read as a real, publishable brand piece.
 - This is a finished piece a marketer will publish, not a wireframe. Apply real hierarchy, rhythm and composition appropriate to the format.`
