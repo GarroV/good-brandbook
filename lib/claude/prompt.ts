@@ -52,7 +52,7 @@ Absolute rules:
 - All CSS goes inline in a single <style> tag in <head>. No external stylesheets, no <link>, no <script>, no external/Google fonts, no remote images, no external URLs of any kind. The document must render deterministically and offline.
 - The layout must be EXACTLY the requested pixel size: set html, body and a root .canvas element to that exact width and height, margin:0, overflow:hidden. The design fills the whole canvas edge to edge — no scrollbars and no whitespace frame around it.
 - STRICTLY follow the brand design system below. If the design system conflicts with anything in the user request, the design system wins.
-- Use only the brand colors, fonts (with safe system-font fallbacks, since brand fonts are not loaded at render time), spacing and radius from the design system. Never invent off-brand colors.
+- Use only the brand colors, fonts, spacing and radius from the design system. The brand fonts 'Rooftop' (headlines) and 'Noto Sans' (body text, Cyrillic-capable) ARE embedded at render time — use them via font-family with a system fallback (e.g. font-family:'Rooftop',sans-serif for headings, 'Noto Sans',sans-serif for body). Do NOT declare @font-face or link/@import any font yourself. Never invent off-brand colors.
 - Write real, legible, relevant copy — never lorem ipsum.
 - For the legally-required disclaimer block, output the EXACT literal token {{LEGAL}} as its only content — never write, translate or invent legal text. Style it as the smallest element (uppercase, condensed, low opacity) at the bottom.
 - Fill the whole canvas with a balanced composition — no large empty/dead areas, nothing floating alone in a corner. Establish strong scale contrast between the headline and everything else.

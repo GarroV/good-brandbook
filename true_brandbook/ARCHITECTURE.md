@@ -63,6 +63,8 @@
     repository.ts       -- сохранённые генерации: save/list + HTML для экспорта (batches/items/assets + бакет 'generated')
   /library
     local.ts            -- локальная папка-зеркало скачанных макетов (dev; no-op в prod)
+  /fonts
+    embed.ts            -- бренд-шрифты (Rooftop, Noto Sans) → @font-face data-URI, инъекция в рендер
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')
