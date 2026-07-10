@@ -5,6 +5,7 @@ import { getActiveWorkspaceId } from '@/lib/workspace'
 import { getGenerationForExport } from '@/lib/generations/repository'
 import { FORMATS, type FormatKey } from '@/lib/formats'
 import { renderFinal } from '@/lib/puppeteer/render'
+import { saveDownloadToLocalLibrary } from '@/lib/library/local'
 import type { BrandTokens } from '@/lib/claude/prompt'
 
 // Puppeteer needs the Node.js runtime; a final render can take a while.
@@ -53,6 +54,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const contentType = output === 'pdf' ? 'application/pdf' : 'image/png'
   const filename = `${gen.format}-${id.slice(0, 8)}.${output}`
+
+  // Also mirror the downloaded file into the local library folder (dev only;
+  // no-op when LOCAL_LIBRARY_DIR is unset or in production). Best-effort.
+  await saveDownloadToLocalLibrary(gen.format, filename, bytes)
+
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       'Content-Type': contentType,

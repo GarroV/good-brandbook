@@ -30,6 +30,7 @@
 - Галерея (весь воркспейс) и «Мои макеты» (свои) показывают сохранённые генерации сеткой (`components/generation-grid.tsx`, превью по signed-URL)
 - Экспорт: `GET /api/export/[id]` рендерит финальный PNG (digital) / PDF (print) из сохранённого HTML с re-stamp легала; кнопка «Скачать» в `/new` и галерее
 - `/new`: таймер прогресса + подсказка «обычно 15–40 с», селект формата заблокирован во время генерации
+- Локальная папка-библиотека (dev): при скачивании файл зеркалится в `LOCAL_LIBRARY_DIR/02 Generated/<format>/` (`lib/library/local.ts`); в prod — no-op
 
 ### Notes
 - Библиотека эталонов засеяна 14 реальными макетами Dodo из Google Drive (a5 ×1, instagram_post ×6, instagram_story ×7; рынки TR/UAE/QA/RU/IMF; `source='gdrive'`); коннектор Drive работает — можно долить ещё

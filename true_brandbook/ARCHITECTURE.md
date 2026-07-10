@@ -61,6 +61,8 @@
     repository.ts       -- brand_materials + Storage: getExemplars, loadReferenceImages, upload/list/delete, signed URL
   /generations
     repository.ts       -- сохранённые генерации: save/list + HTML для экспорта (batches/items/assets + бакет 'generated')
+  /library
+    local.ts            -- локальная папка-зеркало скачанных макетов (dev; no-op в prod)
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')
@@ -260,6 +262,7 @@ SUPABASE_SERVICE_ROLE_KEY       — секретный ключ (только с
 ANTHROPIC_API_KEY               — Claude API (Phase 2)
 RESEND_API_KEY                  — email инвайты (Phase 5)
 SUPERADMIN_EMAIL                — email суперадмина
+LOCAL_LIBRARY_DIR               — локальная папка-зеркало скачанных макетов (dev, необязательно)
 ```
 
 ---
