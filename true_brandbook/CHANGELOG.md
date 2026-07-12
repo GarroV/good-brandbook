@@ -9,6 +9,7 @@
 - `REFERENCE_DIRECTIVE` в `lib/claude/prompt.ts` — единая директива для обоих провайдеров
 - `lib/workspace.ts` — `getActiveWorkspaceId()` и `getAdminWorkspaceId()`
 - i18n: namespace `admin_materials`, nav-ключ `materials` (en + ru)
+- Плашка «ТЕСТ» на карточках галереи: колонка `batches.is_test` (миграция `004`, backfill существующих в `true`), выставляется при генерации без реального юзера (`DISABLE_AUTH`). Рендерится переиспользуемым `ui/Badge` — тот же компонент планово пойдёт под метку автора. i18n-ключ `generations.test` (en/ru)
 
 ### Security
 - Admin-only server actions авторизуют роль **по БД внутри самого экшена** (не только middleware) для `/admin/materials` и `/admin/brandbook` — закрывает обход через action-ID, вытащенный из `_next/static` и отправленный с разрешённого роута (нашли адверсариал-ревью + внешний security-скан, HIGH)

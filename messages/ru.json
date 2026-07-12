@@ -70,7 +70,8 @@
     "error": "Не удалось сгенерировать. Попробуйте снова."
   },
   "generations": {
-    "download": "Скачать"
+    "download": "Скачать",
+    "test": "ТЕСТ"
   },
   "admin_brandbook": {
     "title": "Брендбук",

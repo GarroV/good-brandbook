@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
         format,
         html,
         previewBytes: image,
+        isTest: authDisabled || !userId,
       })
       id = saved?.itemId ?? null
     } catch {

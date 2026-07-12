@@ -78,7 +78,7 @@
 
 /components
   /ui                   -- shadcn/base-nova компоненты
-  generation-grid.tsx   -- сетка карточек сгенерированных макетов (превью + скачать)
+  generation-grid.tsx   -- сетка карточек сгенерированных макетов (превью + скачать + плашка «ТЕСТ» через ui/Badge; тот же Badge переиспользуется под метку автора)
 
 /messages
   en.json               -- English (auth, nav, common, gallery)
@@ -92,6 +92,7 @@
     001_initial.sql     -- полная схема БД
     002_brand_materials.sql -- brand_materials + приватный бакет brand-materials
     003_generated_bucket.sql -- приватный бакет generated (HTML + превью сохранённых генераций)
+    004_batches_is_test.sql -- batches.is_test (плашка «ТЕСТ» для dev/no-auth генераций)
 
 /__tests__
   formats.test.ts       -- 5 unit тестов

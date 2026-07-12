@@ -70,7 +70,8 @@
     "error": "Generation failed. Please try again."
   },
   "generations": {
-    "download": "Download"
+    "download": "Download",
+    "test": "TEST"
   },
   "admin_brandbook": {
     "title": "Brandbook",

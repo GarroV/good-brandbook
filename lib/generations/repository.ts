@@ -11,6 +11,8 @@ export interface SaveGenerationInput {
   format: string
   html: string // stored CLEAN (keeps the {{LEGAL}} placeholder) so export re-stamps
   previewBytes: Uint8Array
+  // True for dev / no-auth (DISABLE_AUTH) runs — badged as TEST in the gallery.
+  isTest: boolean
 }
 
 export interface GenerationCard {
@@ -19,6 +21,7 @@ export interface GenerationCard {
   prompt: string
   createdAt: string
   previewUrl: string | null
+  isTest: boolean
 }
 
 async function signedUrl(path: string): Promise<string | null> {
@@ -41,6 +44,7 @@ export async function saveGeneration(
       user_id: input.userId,
       prompt: input.prompt,
       status: 'draft',
+      is_test: input.isTest,
     } as never)
     .select('id')
     .single()
@@ -93,7 +97,7 @@ export async function listGenerations(
 
   let query = admin
     .from('batches')
-    .select('id, prompt, created_at')
+    .select('id, prompt, created_at, is_test')
     .eq('workspace_id', workspaceId)
     .order('created_at', { ascending: false })
     .limit(LIST_LIMIT)
@@ -133,6 +137,7 @@ export async function listGenerations(
       prompt: batch.prompt,
       createdAt: batch.created_at,
       previewUrl: path ? await signedUrl(path) : null,
+      isTest: batch.is_test ?? false,
     })
   }
   cards.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))

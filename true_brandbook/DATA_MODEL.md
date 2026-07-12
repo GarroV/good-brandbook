@@ -104,11 +104,14 @@ create table batches (
   prompt            text not null,
   reference_batch_id uuid references batches(id),
   status            text default 'draft' check (status in ('draft','published')),
+  is_test           boolean not null default false,
   created_at        timestamptz default now()
 );
 ```
 
 `reference_batch_id` — ссылка на исходный батч если маркетолог нажал "Взять за основу". Создаётся новый батч, старый не меняется.
+
+`is_test` — генерация сделана в dev / без реального залогиненного юзера (`DISABLE_AUTH`); в галерее помечается плашкой «ТЕСТ» (переиспользуемый `ui/Badge`). В проде под реальным пользователем — `false`. Миграция `004`, существующие батчи забэкфилены в `true`.
 
 ### batch_items
 ```sql

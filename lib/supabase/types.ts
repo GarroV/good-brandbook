@@ -136,6 +136,7 @@ export interface Database {
           prompt: string
           reference_batch_id: string | null
           status: 'draft' | 'published'
+          is_test: boolean
           created_at: string
         }
         Insert: {
@@ -145,6 +146,7 @@ export interface Database {
           prompt: string
           reference_batch_id?: string | null
           status?: 'draft' | 'published'
+          is_test?: boolean
           created_at?: string
         }
         Update: {
@@ -154,6 +156,7 @@ export interface Database {
           prompt?: string
           reference_batch_id?: string | null
           status?: 'draft' | 'published'
+          is_test?: boolean
           created_at?: string
         }
         Relationships: []
