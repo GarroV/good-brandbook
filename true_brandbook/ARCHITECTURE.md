@@ -65,7 +65,7 @@
   /library
     local.ts            -- локальная папка-зеркало скачанных макетов (dev; no-op в prod)
   /fonts
-    embed.ts            -- бренд-шрифты (Rooftop, Noto Sans) → @font-face data-URI, инъекция в рендер
+    embed.ts            -- prepareRenderHtml: инъекция бренд-шрифтов (@font-face data-URI) + render-guard (запрет переноса посреди слова/числа) в <head>
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')

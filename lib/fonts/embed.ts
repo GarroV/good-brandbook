@@ -42,12 +42,23 @@ export function brandFontStyle(): string {
   return cached
 }
 
-// Inject the brand-font <style> into an HTML document's <head> (or prepend if
-// there is none). Called by the render layer for both preview and final export.
-export function withBrandFonts(html: string): string {
-  const style = brandFontStyle()
-  if (!style) return html
-  if (html.includes('</head>')) return html.replace('</head>', `${style}</head>`)
-  if (html.includes('<head>')) return html.replace('<head>', `<head>${style}`)
-  return style + html
+// A deterministic render guard forced on top of whatever CSS the model emitted.
+// A fixed-size, designed layout must NEVER hyphenate or split a word/number
+// mid-token — the "Пепперони"→"Пеппе рони", "20%"→"2 0%" defect. !important so it
+// wins over any break-word/break-all the model set; wrapping happens at spaces
+// only. The model still sizes text to fit the canvas (system prompt rule).
+const RENDER_GUARD =
+  '<style id="render-guard">' +
+  '*{-webkit-hyphens:none!important;hyphens:none!important;' +
+  'overflow-wrap:normal!important;word-break:keep-all!important;}' +
+  '</style>'
+
+// Prepare an HTML document for the render layer: inject the brand-font @font-face
+// block (data-URIs — network is blocked, so fonts must be inline) and the render
+// guard into <head>. Called for both preview and final export.
+export function prepareRenderHtml(html: string): string {
+  const inject = brandFontStyle() + RENDER_GUARD
+  if (html.includes('</head>')) return html.replace('</head>', `${inject}</head>`)
+  if (html.includes('<head>')) return html.replace('<head>', `<head>${inject}`)
+  return inject + html
 }

@@ -1,5 +1,5 @@
 import puppeteer, { type Browser } from 'puppeteer'
-import { withBrandFonts } from '@/lib/fonts/embed'
+import { prepareRenderHtml } from '@/lib/fonts/embed'
 
 export interface RenderSize {
   width: number
@@ -73,7 +73,7 @@ async function renderOnce(
     })
     await page.setViewport({ ...size, deviceScaleFactor: 1 })
     await page
-      .setContent(withBrandFonts(html), { waitUntil: 'load', timeout: RENDER_TIMEOUT_MS })
+      .setContent(prepareRenderHtml(html), { waitUntil: 'load', timeout: RENDER_TIMEOUT_MS })
       .catch(() => undefined)
     await new Promise((resolve) => setTimeout(resolve, SETTLE_MS))
     if (output === 'pdf') {

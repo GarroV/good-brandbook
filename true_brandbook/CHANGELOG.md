@@ -15,6 +15,7 @@
 
 ### Fixed
 - Миграция `002` идемпотентна: `drop policy if exists` перед `create policy`
+- **Render-guard против разрыва текста**: `prepareRenderHtml` (`lib/fonts/embed.ts`, бывш. `withBrandFonts`) инъектит `*{overflow-wrap:normal;word-break:keep-all;hyphens:none}` с `!important` поверх CSS модели — детерминированно запрещает перенос посреди слова/числа («Пепперони»→«Пеппе-рони», «20%»→«2-0%»); перенос только по пробелам. Подтверждено свежей генерацией
 
 ### UI / UX
 - Продукт переименован в интерфейсе: «Design Terminal» → **Good Brandbook** (навбар + `<title>`)
