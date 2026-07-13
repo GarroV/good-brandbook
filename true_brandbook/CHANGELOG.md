@@ -1,5 +1,47 @@
 # Design Terminal — Changelog
 
+## [Unreleased] — 2026-07-09 — Reference-exemplar library (знание бренда)
+
+### Added
+- Таблица `brand_materials` (миграция `002`) + приватный Storage-бакет `brand-materials` — воркспейс-скоуп библиотека референс-макетов/фото продукта; RLS по `workspace_id`
+- Админка `/admin/materials` — загрузка/удаление материалов (PNG/JPEG/WebP ≤10 МБ), превью по signed-URL (`page.tsx` + `actions.ts` + `MaterialsManager.tsx`)
+- Vision-референсы в генерации: `lib/materials/repository.ts` (`getExemplars`, `loadReferenceImages`) подмешивает до 3 подходящих формату макетов в запрос — OpenAI через `image_url`, Claude через image blocks. Best-effort: пустая/битая библиотека → text-only, генерация не падает
+- `REFERENCE_DIRECTIVE` в `lib/claude/prompt.ts` — единая директива для обоих провайдеров
+- `lib/workspace.ts` — `getActiveWorkspaceId()` и `getAdminWorkspaceId()`
+- i18n: namespace `admin_materials`, nav-ключ `materials` (en + ru)
+- Плашка «ТЕСТ» на карточках галереи: колонка `batches.is_test` (миграция `004`, backfill существующих в `true`), выставляется при генерации без реального юзера (`DISABLE_AUTH`). Рендерится переиспользуемым `ui/Badge` — тот же компонент планово пойдёт под метку автора. i18n-ключ `generations.test` (en/ru)
+
+### Security
+- Admin-only server actions авторизуют роль **по БД внутри самого экшена** (не только middleware) для `/admin/materials` и `/admin/brandbook` — закрывает обход через action-ID, вытащенный из `_next/static` и отправленный с разрешённого роута (нашли адверсариал-ревью + внешний security-скан, HIGH)
+
+### Fixed
+- Миграция `002` идемпотентна: `drop policy if exists` перед `create policy`
+- **Render-guard против разрыва текста**: `prepareRenderHtml` (`lib/fonts/embed.ts`, бывш. `withBrandFonts`) инъектит `*{overflow-wrap:normal;word-break:keep-all;hyphens:none}` с `!important` поверх CSS модели — детерминированно запрещает перенос посреди слова/числа («Пепперони»→«Пеппе-рони», «20%»→«2-0%»); перенос только по пробелам. Подтверждено свежей генерацией
+- **Подбор фото продукта (`matchProductPhoto`)** переписан: (1) **учёт русских падежей** — сопоставление по основе слова (`stemMatch`), а не подстрокой, поэтому «индейк**ой**»→«индейка», «остр**ую**»→«острая» ловятся (раньше склонённые формы не совпадали и подставлялось случайное фото); (2) **теги и заголовок бьются по словам** — составной тег `"dodo mix"` больше не цепляет слово «Dodo» из «в приложении Dodo» (бренд-слово в GENERIC-стоп-листе); (3) **нет уверенного совпадения → `null`** (чистый плейсхолдер), а не fallback на самое свежее фото — оффер подкрепляется правильным продуктом или ничем. Проверено генерациями: креветки/васаби, индейка/брусника, острая, пепперони, ветчина-сыр → верное фото; «просто пицца» → плейсхолдер
+
+### UI / UX
+- Продукт переименован в интерфейсе: «Design Terminal» → **Good Brandbook** (навбар + `<title>`)
+- Липкая шапка (`sticky` + blur); навбар/подписи жирнее, `muted-foreground` затемнён для читаемости
+- Материалы: размеры формата в селекте (1080×1080…), превью открываются в полный размер по клику, убран неинформативный выбор «тип» (product_photo вернём с hero-слотом)
+- Новый роут `/my` (раньше навбар вёл в никуда → падение); галерея и «мои макеты» — честные пустые стейты с пояснением (Материалы = референсы, Галерея = сгенерированное)
+- Айдентика: UI-шрифт **Nunito** (скруглённый, с кириллицей; self-hosted через next/font) + оранжевый Dodo `#FF4E00` на primary-кнопках
+- Навигация: активный пункт (`aria-current`, клиентский `MainNav`), мобильный горизонтальный скролл, переключатель языка EN/RU (`LangToggle`)
+- Материалы: фильтр по формату и рынку + счётчик
+
+### Generation — persistence & export
+- Генерация сохраняется: `lib/generations/repository.ts` (`saveGeneration`) пишет batch + batch_item + asset и кладёт чистый HTML + JPEG-превью в приватный бакет `generated` (миграция 003)
+- Галерея (весь воркспейс) и «Мои макеты» (свои) показывают сохранённые генерации сеткой (`components/generation-grid.tsx`, превью по signed-URL)
+- Экспорт: `GET /api/export/[id]` рендерит финальный PNG (digital) / PDF (print) из сохранённого HTML с re-stamp легала; кнопка «Скачать» в `/new` и галерее
+- `/new`: таймер прогресса + подсказка «обычно 15–40 с», селект формата заблокирован во время генерации
+- Локальная папка-библиотека (dev): при скачивании файл зеркалится в `LOCAL_LIBRARY_DIR/02 Generated/<format>/` (`lib/library/local.ts`); в prod — no-op
+- **Реальные бренд-шрифты**: Rooftop (хедлайны) + Noto Sans (body, кириллица) забраны с Drive в `public/fonts/`, встраиваются `@font-face` data-URI в рендер (`lib/fonts/embed.ts`, инъекция в `render.ts`); токены брендбука → Rooftop/Noto Sans; системный промпт обновлён. Настоящая типографика вместо fallback. (Лицензия: Rooftop — коммерческий, только внутреннее использование; репо не открывать)
+- **Hero-слот (фото продукта)**: генератор авто-подбирает реальное фото из библиотеки (`kind='product_photo'`, матч по тегам RU/EN на текст запроса, `resolveProductPhoto`) и вставляет в `{{PRODUCT}}` при генерации и экспорте — как `{{LEGAL}}`. Промпт ветвится: есть фото → модель ставит герой-`<img src="{{PRODUCT}}">` и верстает вокруг; нет → чистый плейсхолдер. Пользователь рулит выбором, называя продукт в запросе. Вместо фейк-блоба — настоящая пицца.
+- **Паттерны реальных макетов → в промпт**: проанализирован дизайн-архив (~452 превью, 6 форматов) → `true_brandbook/DODO_LAYOUT_PATTERNS.md` (общие правила + бриф под формат). `lib/claude/patterns.ts` (`HOUSE_RULES` + `FORMAT_BRIEFS`) подмешивается в `buildPrompt` вместе с `render_constraint` (offline: без `url()`/внешних картинок; продукт = чистый плейсхолдер под будущий hero-слот). Выход стал заметно on-brand: оффер-pill, strike-through старой цены, cream-фон, Rooftop, «ONLY IN DODO APP», лого, легал.
+
+### Notes
+- Библиотека эталонов засеяна 14 реальными макетами Dodo из Google Drive (a5 ×1, instagram_post ×6, instagram_story ×7; рынки TR/UAE/QA/RU/IMF; `source='gdrive'`); коннектор Drive работает — можно долить ещё
+- Saved-генерации сейчас `status='draft'`; когда включим draft-cleanup cron, публикация (draft→published) защитит их от очистки
+
 ## [0.1.0] — 2026-06-04/05 — Phase 0: Infrastructure
 
 ### Added

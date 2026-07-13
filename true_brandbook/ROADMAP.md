@@ -12,7 +12,7 @@
 **⚠️ Ручные шаги перед запуском:**
 - Зарегистрировать `custom_access_token_hook`: Dashboard → Authentication → Hooks
 - Создать первый workspace + admin через Supabase SQL Editor
-- Заполнить `.env.local` ключами из проекта `btlglelwxazdxfqdmcti`
+- Заполнить `.env.local` ключами из проекта `kuzxmhthtwzbenrxxuvh` (Good_Branbook, handerhaneder's Org)
 
 ## Phase 1 — Брендбук
 

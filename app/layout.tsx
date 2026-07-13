@@ -1,14 +1,16 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Nunito, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+// Nunito: rounded + friendly (Dodo-adjacent) and covers Cyrillic — self-hosted
+// by next/font at build time, so no runtime Google request (CSP-safe).
+const nunito = Nunito({ variable: '--font-nunito', subsets: ['latin', 'cyrillic'], display: 'swap' })
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'], display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'Design Terminal',
+  title: 'Good Brandbook',
   description: 'Generate brand-compliant marketing layouts'
 }
 
@@ -22,7 +24,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${nunito.variable} ${geistMono.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

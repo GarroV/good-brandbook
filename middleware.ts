@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthDisabled } from '@/lib/dev-auth'
 
 function parseJwtClaims(token: string): Record<string, unknown> {
   try {
@@ -13,6 +14,11 @@ function parseJwtClaims(token: string): Record<string, unknown> {
 }
 
 export async function middleware(request: NextRequest) {
+  // Dev-only: skip the auth gate entirely (see lib/dev-auth.ts).
+  if (isAuthDisabled()) {
+    return NextResponse.next({ request })
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(

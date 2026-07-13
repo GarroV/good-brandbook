@@ -20,6 +20,10 @@
 ```
 /app
   /api
+    /generate
+      route.ts          -- POST: генерация + persist, возвращает id (nodejs, maxDuration 300)
+    /export/[id]
+      route.ts          -- GET: финальный PNG/PDF по сохранённому макету (re-stamp legal)
     /invites/[token]
       route.ts          -- GET: валидация invite токена (service role)
   /(auth)               -- публичные страницы
@@ -30,21 +34,51 @@
       page.tsx          -- принятие инвайта (client component)
       actions.ts        -- server action: acceptInvite
   /(app)                -- защищённые страницы (требуют auth)
-    layout.tsx          -- навбар с ролями, getUser() проверка
-    page.tsx            -- галерея (placeholder)
+    layout.tsx          -- шапка (sticky), роли, getUser(); рендерит MainNav + LangToggle
+    MainNav.tsx         -- клиентская навигация: активный пункт (usePathname), мобильный скролл
+    LangToggle.tsx      -- переключатель локали EN/RU (cookie + router.refresh)
+    page.tsx            -- галерея: сохранённые генерации воркспейса (сетка + скачать)
+    /my
+      page.tsx          -- «мои макеты»: генерации текущего пользователя
+    /new
+      page.tsx          -- форма генерации (client): формат + промпт → превью
+    /admin/brandbook    -- редактор брендбука (admin-only): page + actions + BrandbookForm
+    /admin/materials    -- библиотека референс-материалов (admin-only): page + actions + MaterialsManager
   layout.tsx            -- root layout, NextIntlClientProvider
   globals.css
 
 /lib
+  /claude
+    prompt.ts           -- buildPrompt (system + design_system + house_rules + format_brief + render_constraint), buildMockHtml
+    patterns.ts         -- HOUSE_RULES + FORMAT_BRIEFS (из анализа реальных макетов; см. DODO_LAYOUT_PATTERNS.md)
+    client.ts           -- generateHtml (Anthropic, vision-референсы)
+  /openai
+    client.ts           -- generateHtmlOpenAI (OpenAI, vision-референсы через image_url)
+  /puppeteer
+    render.ts           -- renderPreview → JPEG (JS off + перехват сети: только data:/about:)
+  /validation
+    html.ts             -- extractHtml, validateHtml (быстрый пре-фильтр)
+  /materials
+    repository.ts       -- brand_materials + Storage: getExemplars, loadReferenceImages, upload/list/delete, signed URL
+  /generations
+    repository.ts       -- сохранённые генерации: save/list + HTML для экспорта (batches/items/assets + бакет 'generated')
+  /library
+    local.ts            -- локальная папка-зеркало скачанных макетов (dev; no-op в prod)
+  /fonts
+    embed.ts            -- prepareRenderHtml: инъекция бренд-шрифтов (@font-face data-URI) + render-guard (запрет переноса посреди слова/числа) в <head>
   /supabase
     server.ts           -- createClient() async SSR, createAdminClient() service role
     client.ts           -- createClient() browser ('use client')
-    types.ts            -- Database interface (10 таблиц, explicit Update types)
+    types.ts            -- Database interface (11 таблиц, explicit Update types)
   /formats
     index.ts            -- FORMATS константа, FormatKey, FORMAT_KEYS
+  workspace.ts          -- getActiveWorkspaceId / getAdminWorkspaceId (admin-гейт по БД)
+  dev-auth.ts           -- isAuthDisabled() (dev-only, gated by NODE_ENV)
+  utils.ts              -- cn и пр.
 
 /components
   /ui                   -- shadcn/base-nova компоненты
+  generation-grid.tsx   -- сетка карточек сгенерированных макетов (превью + скачать + плашка «ТЕСТ» через ui/Badge; тот же Badge переиспользуется под метку автора)
 
 /messages
   en.json               -- English (auth, nav, common, gallery)
@@ -56,6 +90,9 @@
 /supabase
   /migrations
     001_initial.sql     -- полная схема БД
+    002_brand_materials.sql -- brand_materials + приватный бакет brand-materials
+    003_generated_bucket.sql -- приватный бакет generated (HTML + превью сохранённых генераций)
+    004_batches_is_test.sql -- batches.is_test (плашка «ТЕСТ» для dev/no-auth генераций)
 
 /__tests__
   formats.test.ts       -- 5 unit тестов
@@ -160,26 +197,40 @@ const supabase = createClient()
 
 ---
 
-## Флоу генерации (Phase 2, не реализован)
+## Флоу генерации (прототип — реализован)
+
+Один формат, синхронный ответ. Батчи/очередь/публикация — Phase 2+.
 
 ```
-POST /api/generate
-  → проверка брендбука (tokens не пустой)
-  → check_and_increment_limit() — атомарно в Postgres
-  → создать batch + batch_items
-  → Promise.allSettled(formats.map(generateFormat))
-     → Claude API → HTML
-     → validateHtml()
-     → uploadHtml() → Supabase Storage
-     → Puppeteer → JPEG превью
-     → updateItem(status: 'preview_ready')
-  → Supabase Realtime уведомляет клиент
-
-POST /api/batches/[id]/publish
-  → Puppeteer → PDF/PNG
-  → updateItem(status: 'done')
-  → activity_feed INSERT → Realtime
+POST /api/generate   (runtime: nodejs, maxDuration: 300)
+  → auth (getUser) или DISABLE_AUTH (dev) → workspace_id
+  → brandbook воркспейса (tokens + context)
+  → getExemplars(workspace, format) + loadReferenceImages()
+       — до 3 референс-макетов из brand_materials (best-effort; ошибки → пропуск, генерация не падает)
+  → buildPrompt() — SYSTEM_PROMPT + design_system (приоритетный блок) + формат + запрос
+  → провайдер (GENERATION_PROVIDER):
+       openai    → generateHtmlOpenAI(assembled, references)  (референсы = image_url)
+       anthropic → generateHtml(assembled, references)        (референсы = image blocks)
+       MOCK_GENERATION=1 → buildMockHtml() (без API, dev)
+  → extractHtml() + validateHtml() (пре-фильтр; настоящая граница SSRF — слой рендера)
+  → resolveProductPhoto(): реальное фото продукта по запросу (kind=product_photo, теги RU/EN) → data-URI (промпт ветвится: есть фото → hero-<img src={{PRODUCT}}>, нет → чистый плейсхолдер)
+  → подстановка legal + фото вместо {{LEGAL}}/{{PRODUCT}} (в хранимом HTML плейсхолдеры остаются — макеты чистые/портативные)
+  → Puppeteer renderPreview() → JPEG data-URI
+  → saveGeneration(): batch (draft) + batch_item (preview_ready) + HTML/превью в бакет 'generated' + asset (best-effort)
+  → { preview, html, id }
 ```
+
+Экспорт (кнопка «Скачать» в /new и галерее):
+
+```
+GET /api/export/[id]
+  → getGenerationForExport(): чистый HTML из бакета 'generated' (scoped по workspace)
+  → re-stamp legal вместо {{LEGAL}}
+  → Puppeteer renderFinal() → PNG (digital) / PDF (print)
+  → attachment (Content-Disposition)
+```
+
+Публикация в галерею (draft→published), батч из нескольких форматов, Realtime, лимиты (`check_and_increment_limit`) — Phase 2+.
 
 ---
 
@@ -216,6 +267,7 @@ SUPABASE_SERVICE_ROLE_KEY       — секретный ключ (только с
 ANTHROPIC_API_KEY               — Claude API (Phase 2)
 RESEND_API_KEY                  — email инвайты (Phase 5)
 SUPERADMIN_EMAIL                — email суперадмина
+LOCAL_LIBRARY_DIR               — локальная папка-зеркало скачанных макетов (dev, необязательно)
 ```
 
 ---
