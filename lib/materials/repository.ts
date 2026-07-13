@@ -152,21 +152,58 @@ export async function getProductPhotos(workspaceId: string): Promise<ProductPhot
   }))
 }
 
-// Deterministically pick the product photo that best matches a prompt: score by
-// how many of a photo's keywords (title words + tags, RU/EN) appear in the
-// prompt. Falls back to the most recent photo so we always offer a real shot —
-// the user steers the choice by naming the product in their request.
+// Category words shared by many products — they don't identify ONE product, so
+// they're excluded from scoring (otherwise "пицца" alone would pick an arbitrary
+// pizza). Matching must hit a DISTINGUISHING keyword.
+const GENERIC_KEYWORDS = new Set([
+  'pizza', 'пицца', 'пиццу', 'пиццы', 'dodo', 'додо', 'app', 'арр',
+])
+
+// Stem-aware word match, tolerant of Russian inflection: a tag like "индейка"
+// must match "индейкой" in a prompt, "острая" must match "острую", "креветки"
+// must match "креветками". Literal substring matching (the old approach) failed
+// on every declined form. We compare on the shared prefix (the stem).
+function stemMatch(a: string, b: string): boolean {
+  if (a === b) return true
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  const shorter = Math.min(a.length, b.length)
+  // The whole shorter word is a prefix of the longer one ("сыр"⊂"сырный",
+  // "ранч"⊂"ранчо") — strong signal, works for short words too.
+  if (i === shorter && shorter >= 3) return true
+  // Otherwise require a long shared stem covering most of the shorter word,
+  // tolerating 1–2 char case endings. ≥4 avoids false hits like "перец"/"первый".
+  return i >= 4 && i >= shorter - 2
+}
+
+// Deterministically pick the product photo whose distinguishing keywords best
+// match the prompt (RU-inflection-aware). Returns null when NOTHING specific
+// matches — so a layout for a product we don't have a photo of gets a clean
+// placeholder instead of a wrong/arbitrary product. The marketer steers the
+// choice by naming the product in their request.
 export function matchProductPhoto(photos: ProductPhoto[], prompt: string): ProductPhoto | null {
   if (photos.length === 0) return null
-  const p = prompt.toLowerCase()
-  let best = photos[0]
-  let bestScore = -1
+  const promptWords = prompt
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 3)
+
+  let best: ProductPhoto | null = null
+  let bestScore = 0 // a photo must score ≥1 distinguishing hit to be chosen
   for (const photo of photos) {
+    // Split BOTH title and tags into individual words — a multi-word tag like
+    // "dodo mix" must not let the brand word "Dodo" (present in almost every
+    // prompt) score a match; splitting turns it into "dodo" (generic, dropped)
+    // + "mix".
     const keywords = [
       ...photo.title.toLowerCase().split(/[^\p{L}\p{N}]+/u),
-      ...photo.tags.map((t) => t.toLowerCase()),
-    ].filter((w) => w.length >= 3)
-    const score = keywords.reduce((n, w) => (p.includes(w) ? n + 1 : n), 0)
+      ...photo.tags.flatMap((t) => t.toLowerCase().split(/[^\p{L}\p{N}]+/u)),
+    ].filter((w) => w.length >= 3 && !GENERIC_KEYWORDS.has(w))
+
+    let score = 0
+    for (const kw of keywords) {
+      if (promptWords.some((w) => stemMatch(w, kw))) score++
+    }
     if (score > bestScore) {
       bestScore = score
       best = photo
